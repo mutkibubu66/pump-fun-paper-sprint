@@ -1,18 +1,21 @@
 """Pump.fun paper-trading bot for make.fun (agent-fun/replay/v2).
 
-Strategy: early momentum with a hard exit discipline. Every new coin is a
-candidate the moment its CreateEvent arrives. A coin is bought only once it
-has already run up at least 10% from its creation price (fresh curves are
-mostly bundled launches that get dumped, so the run-up is the filter) and its
-size cap lets us buy a meaningful amount; the stake is a fixed 0.05 SOL
-(never more than five open positions at once, never more than the free cash
-allows). Each position is then watched every batch and sold in full on the
-first of three exits:
+Strategy: fast in, fast out. Every new coin is a candidate the moment its
+CreateEvent arrives. A coin is bought only once it has already run up at
+least 2% from its creation price (fresh curves are mostly bundled launches
+that get dumped, so the run-up is the filter) and its size cap lets us buy a
+meaningful amount; the stake is a fixed 0.05 SOL (never more than five open
+positions at once, never more than the free cash allows). Each position is
+then watched every batch and sold in full on the first of three exits:
 
-  * take profit: price up 30% from our entry price,
-  * stop loss:   price down 20% from our entry price,
-  * timeout:     held longer than 4,000 slots (~27 minutes) with neither
-                 exit hit, so the slot is freed for a fresher coin.
+  * take profit: price up 15% from our entry price,
+  * stop loss:   price down 7% from our entry price,
+  * timeout:     held longer than 1,200 slots (~8 minutes) with neither
+                 exit hit, so the slot turns over fast for a fresher coin.
+
+Fast exits won on the dev window: wider stops and longer holds bled value
+as most coins die within minutes, while quick 15%/7% round trips with a
+short timeout kept the book closest to breakeven before fees.
 
 Prices come from the bonding curve's virtual reserves (SOL per token), the
 entry price from the position's cost over its token amount; the ratio is
@@ -39,13 +42,13 @@ import makefun_bot  # noqa: E402  (after the sys.path line: -P leaves the script
 STAKE_LAMPORTS = 50_000_000            # 0.05 SOL per coin
 MIN_BUY_LAMPORTS = 10_000_000          # 0.01 SOL: the guardrail's round-trip floor
 MAX_SLIPPAGE_BPS = 10_000
-TAKE_PROFIT_NUM = 13                   # sell when price >= 1.3x entry
-TAKE_PROFIT_DEN = 10
-STOP_LOSS_NUM = 80                     # sell when price <= 0.80x entry
+TAKE_PROFIT_NUM = 115                  # sell when price >= 1.15x entry
+TAKE_PROFIT_DEN = 100
+STOP_LOSS_NUM = 93                     # sell when price <= 0.93x entry
 STOP_LOSS_DEN = 100
-HOLD_TIMEOUT_SLOTS = 4000              # ~27 minutes at ~0.4 s per slot
-MOMENTUM_NUM = 11                      # buy only once price >= 1.1x creation price
-MOMENTUM_DEN = 10
+HOLD_TIMEOUT_SLOTS = 1200              # ~8 minutes at ~0.4 s per slot
+MOMENTUM_NUM = 102                     # buy only once price >= 1.02x creation price
+MOMENTUM_DEN = 100
 
 #: Coins created and not yet decided (only tested for membership, never iterated).
 candidates = set()
